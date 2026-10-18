@@ -1,0 +1,413 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-post",
+        "responseMode": "lastNode",
+        "options": {
+          "responseCode": {
+            "values": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        176
+      ],
+      "id": "a2ff211d-524f-44e5-9608-ba3fb98ea2bb",
+      "name": "Webhook",
+      "webhookId": "0eea063a-1572-4ee0-bf6f-f8272b980888"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\nreturn [{ json: { ...parsed, topic: $('Webhook').first().json.body.topic } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        176
+      ],
+      "id": "9ec3a4fa-2d95-4b4f-8b1f-f560e57557d8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1127120467139848/photos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{$json.generations_by_pk.generated_images[0].url}}\",\n  \"caption\": \"{{$('Code in JavaScript').item.json.facebook_caption}}\\n\\n{{$('Code in JavaScript').item.json.hashtags.map(h => '#' + h).join(' ')}}\\n\\n{{$('Code in JavaScript').item.json.cta}}\",\n  \"access_token\":\"YOUR_FACEBOOK_PAGE_ACCESS_TOKEN\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        176
+      ],
+      "id": "f1dbe7c5-927d-4e3e-bf3a-ec554ce593a1",
+      "name": "Post to Facebook"
+    },
+    {
+      "parameters": {
+        "url": "=https://cloud.leonardo.ai/api/rest/v1/generations/{{$node[\"Leonardo ai\"].json.sdGenerationJob.generationId}}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Authorization\": \"YOUR_LEONARDO_API_KEY\",\n  \"Content-Type\": \"application/json\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        176
+      ],
+      "id": "37ed69ff-d878-42e2-bc6a-d4c7ac02dab3",
+      "name": "leanardo"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "3feb6e67-879c-4ba0-a202-5cb5336ae5a5",
+      "name": "Wait1",
+      "webhookId": "0f97a99b-af99-471e-b96c-c5c8c015cd76"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/17841430420452313/media_publish",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"creation_id\": \"{{ $('Instagram').item.json.id }}\",\n  \"access_token\": \"YOUR_FACEBOOK_PAGE_ACCESS_TOKEN\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1824,
+        0
+      ],
+      "id": "2f96ffd3-01ef-4e3a-91ca-9b2c8baf7a24",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_ACTUAL_GEMINI_API_KEY",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are a social media expert. Given this topic:{{ $json.body.topic }} \\n\\nGenerate a JSON object with these exact keys:\\n- facebook_caption (max 300 chars)\\n- instagram_caption (max 150 chars, casual tone)\\n- linkedin_caption (professional, max 500 chars)\\n- youtube_description (engaging, max 400 chars)\\n- hashtags (array of 10 strings, no # symbol)\\n- cta (a strong call-to-action sentence)\\n- image_prompt (detailed prompt for AI image generation)\\n\\nReturn ONLY valid JSON, no markdown.Generate captions for only mentioned platforms{{ $json.body.platforms }}\"\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        176
+      ],
+      "id": "2c58c568-212e-411c-ba9e-debbc1a695ba",
+      "name": "gemini",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/generations",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Authorization\": \"YOUR_LEONARDO_API_KEY\",\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.image_prompt }}\",\n  \"modelId\": \"6bef9f1b-29cb-40c7-b9df-32b51c1f67d3\",\n  \"width\": 1024,\n  \"height\": 1024,\n  \"num_images\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        176
+      ],
+      "id": "2a41c191-a1de-4a99-823b-52dc40579938",
+      "name": "Leonardo ai"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2032,
+        0
+      ],
+      "id": "c048026e-c87b-4cbf-a366-18cfa9984198",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BhKxrJGPOMNcrpXy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/17841430420452313/media",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"{{$json.generations_by_pk.generated_images[0].url}}\",\n  \"caption\": \"{{$('Code in JavaScript').item.json.instagram_caption}}\\n\\n{{$('Code in JavaScript').item.json.hashtags.map(h => '#' + h).join(' ')}}\\n\\n{{$('Code in JavaScript').item.json.cta}}\",\n  \"access_token\": \"YOUR_FACEBOOK_PAGE_ACCESS_TOKEN\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "128f640f-fa47-48af-81fc-1f6dd025ae54",
+      "name": "Instagram"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        176
+      ],
+      "id": "c036a35d-6c61-4310-b324-8ff0ccb37a86",
+      "name": "Wait",
+      "webhookId": "8c21f10e-8cb6-49f6-a2b6-34bfc0b80bf6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b4059e2f-8fb7-4a97-9c9c-c64e43c7ed37",
+              "leftValue": "={{ $json.generations_by_pk.generated_images[0].url }}",
+              "rightValue": "[defined]",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        208
+      ],
+      "id": "ae63f86c-21dc-4cb8-9c3f-7c370936a399",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        432
+      ],
+      "id": "7f9945da-2b95-4c67-804b-081b808bc648",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BhKxrJGPOMNcrpXy",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Leonardo ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leanardo": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leonardo ai": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "leanardo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b32e5255-1fb8-432d-86ba-72103643ff88",
+  "meta": {
+    "instanceId": "4696f0b77ae33cf5d10bc104ddfe4ed3aaf448cbbec1569d3febb019de9fca42"
+  },
+  "nodeGroups": [],
+  "id": "biMI7EOh9macBF47",
+  "tags": []
+}
