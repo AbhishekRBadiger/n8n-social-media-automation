@@ -197,15 +197,6 @@ tested it and reviewed the generated content.
 -   Use n8n credentials or a dedicated secret manager for all tokens and
     API keys.
 
-## Repository safety
-
-Before making this repository public, inspect the exported workflow JSON
-for API keys, access tokens, authorization headers, hard-coded
-credentials, private webhook URLs, and personal or internal data.
-
-Removing a secret from the latest file does not remove it from previous
-Git commits. Revoke or rotate any exposed secret, and clean Git history
-if necessary.
 
 ## Disclaimer
 
@@ -214,9 +205,3 @@ affiliated with or endorsed by Google, Leonardo AI, Meta, Facebook,
 Instagram, LinkedIn, YouTube, or n8n. You are responsible for complying
 with applicable platform terms, API policies, privacy requirements, and
 content rules.
-
-## License
-
-Choose a license before distributing or reusing this project. If you do
-not add a license, others generally do not receive explicit permission
-to reuse the code or workflow.
