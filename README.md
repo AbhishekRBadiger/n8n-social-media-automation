@@ -152,19 +152,6 @@ The exact steps depend on the trigger node in your imported workflow:
 Do not activate a workflow that can publish publicly until you have
 tested it and reviewed the generated content.
 
-## Testing checklist
-
--   [ ] Workflow imports without missing nodes.
--   [ ] Gemini returns the expected fields.
--   [ ] The Code node parses the Gemini response correctly.
--   [ ] Leonardo AI accepts the request and completes image generation.
--   [ ] The generated image URL is publicly accessible to the target
-    platform.
--   [ ] The Facebook Page ID and Page Access Token are valid.
--   [ ] A test post succeeds on the intended Page.
--   [ ] Errors are captured and can be inspected.
--   [ ] Credentials and tokens are not present in the exported JSON or
-    Git history.
 
 ## Known limitations
 
